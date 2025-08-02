@@ -12,8 +12,11 @@ Deploy and secure a PostgreSQL database for n8n using Docker Compose, with best 
 ## Variables (from group_vars/vars.yml)
 - `postgresql_image_tag`: Postgres image version (default: 15)
 - `postgresql_backup_dir`: Directory for logical backups
-- `postgresql_listen_addresses`: Listen addresses (default: 127.0.0.1)
+- `postgresql_listen_addresses`: Listen addresses (default: "*" for external connections)
 - `postgresql_ssl`: Enable SSL (default: off)
+
+## Network Configuration
+PostgreSQL is configured to listen on all interfaces (`*`) to allow connections from Docker containers using host networking. The database is exposed on port 15432 (mapped from internal port 5432) to avoid conflicts with any local PostgreSQL installation.
 
 ## Secrets (from group_vars/vault.yml)
 - `n8n_database_user`: Database user

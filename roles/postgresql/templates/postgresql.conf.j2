@@ -1,3 +1,3 @@
-listen_addresses = '{{ postgresql_listen_addresses | default("127.0.0.1") }}'
+listen_addresses = '{{ postgresql_listen_addresses | default("*") }}'
 port = {{ postgresql_port | default('5432') }}
 ssl = {{ postgresql_ssl | default('off') }}

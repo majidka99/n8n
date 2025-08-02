@@ -4,8 +4,12 @@ services:
     image: n8nio/n8n:{{ n8n_image_tag }}
     user: "1000:1000"
     restart: unless-stopped
+{% if n8n_use_host_network | default(true) %}
+    network_mode: host
+{% else %}
     ports:
       - "{{ n8n_port | default('5678') }}:5678"
+{% endif %}
     environment:
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: "{{ n8n_basic_auth_user }}"

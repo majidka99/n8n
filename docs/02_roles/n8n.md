@@ -12,7 +12,11 @@ Deploy n8n via Docker Compose with production best practices.
 ## Variables (from group_vars/vars.yml)
 - `n8n_image_tag`: n8n image version (e.g., 1.103.2)
 - `n8n_port`: Port for n8n (default: 5678)
+- `n8n_use_host_network`: Use host networking for database connectivity (default: true)
 - `n8n_domain`, `n8n_webhook_url`, `n8n_database_type`, `n8n_database_host`, `n8n_database_port`, `n8n_database_user`, `n8n_database_name`
+
+## Network Configuration
+By default, n8n uses host networking (`network_mode: host`) to connect to the PostgreSQL database running on port 15432. This resolves Docker network isolation issues between containers. Set `n8n_use_host_network: false` to use bridge networking with port mapping instead.
 
 ## Secrets (from group_vars/vault.yml)
 - `n8n_basic_auth_user`: HTTP basic auth username
