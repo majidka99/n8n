@@ -14,7 +14,7 @@ services:
       - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
     command: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
     ports:
-      - "5432:5432"
+      - "15432:5432"
 volumes:
   pg_data:
 # To use a managed service, replace this Compose file with connection info in vars/vault.
