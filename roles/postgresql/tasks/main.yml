@@ -10,7 +10,8 @@
     mode: 0750
   become: true
 
-- name: Deploy PostgreSQL with Docker Compose
+
+- name: Render Docker Compose file for PostgreSQL
   template:
     src: docker-compose.postgres.yml.j2
     dest: /opt/postgres/docker-compose.yml
@@ -19,8 +20,8 @@
     mode: 0640
   become: true
 
-- name: Start PostgreSQL container
-  community.docker.docker_compose:
+- name: Start PostgreSQL container with Compose v2
+  community.docker.docker_compose_v2:
     project_src: /opt/postgres
     restarted: true
   become: true

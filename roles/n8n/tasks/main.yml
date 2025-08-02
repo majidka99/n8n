@@ -17,7 +17,7 @@
   become: true
 
 - name: Start n8n container
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /opt/n8n
     restarted: true
   become: true
