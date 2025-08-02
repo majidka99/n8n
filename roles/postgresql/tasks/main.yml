@@ -1,5 +1,6 @@
 # postgresql/tasks/main.yml
 
+
 # Deploy and secure PostgreSQL for n8n using Docker Compose
 
 - name: Ensure /opt/postgres directory exists
@@ -20,6 +21,23 @@
     mode: 0750
   become: true
 
+- name: Copy custom postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest: /opt/postgres/postgresql.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Copy custom pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /opt/postgres/pg_hba.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
 
 - name: Render Docker Compose file for PostgreSQL
   template:
@@ -42,24 +60,6 @@
     port: 15432
     delay: 5
     timeout: 60
-  become: true
-
-- name: Copy custom postgresql.conf
-  template:
-    src: postgresql.conf.j2
-    dest: /opt/postgres/postgresql.conf
-    owner: root
-    group: root
-    mode: 0644
-  become: true
-
-- name: Copy custom pg_hba.conf
-  template:
-    src: pg_hba.conf.j2
-    dest: /opt/postgres/pg_hba.conf
-    owner: root
-    group: root
-    mode: 0644
   become: true
 
 - name: Reload PostgreSQL config
