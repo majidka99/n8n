@@ -10,3 +10,6 @@ molecule-venv/
 
 # Ignore testing_scripts for now as they are not done.
 testing_scripts
+
+# log file for running ansible playbook
+log.txt

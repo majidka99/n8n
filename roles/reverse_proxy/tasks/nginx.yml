@@ -15,9 +15,9 @@
     update_cache: yes
   become: true
 
-- name: Deploy hardened Nginx config
+- name: Deploy temporary HTTP-only Nginx config for certificate validation
   template:
-    src: n8n.conf.j2
+    src: n8n-http.conf.j2
     dest: /etc/nginx/sites-available/n8n.conf
     owner: root
     group: root
@@ -41,8 +41,21 @@
   notify: reload nginx
   become: true
 
+- name: Ensure Nginx is reloaded before certificate request
+  meta: flush_handlers
+
 - name: Obtain/renew Let's Encrypt certificate with Certbot
   command: certbot --nginx --non-interactive --agree-tos --redirect -d {{ n8n_domain }} --email {{ n8n_admin_email }}
+  notify: reload nginx
+  become: true
+
+- name: Deploy final hardened Nginx config with SSL
+  template:
+    src: n8n.conf.j2
+    dest: /etc/nginx/sites-available/n8n.conf
+    owner: root
+    group: root
+    mode: 0644
   notify: reload nginx
   become: true
 
