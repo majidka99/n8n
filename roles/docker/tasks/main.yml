@@ -147,7 +147,7 @@
       GENERIC_TIMEZONE: "{{ dns_locale_timezone | default('Europe/Prague') }}"
       DB_TYPE: "{{ n8n_database_type }}"
       DB_POSTGRESDB_HOST: "{{ n8n_database_host }}"
-      DB_POSTGRESDB_PORT: "{{ n8n_database_port }}"
+      DB_POSTGRESDB_PORT: "{{ n8n_database_port | string }}"
       DB_POSTGRESDB_DATABASE: "{{ n8n_database_name }}"
       DB_POSTGRESDB_USER: "{{ n8n_database_user }}"
       DB_POSTGRESDB_PASSWORD: "{{ n8n_database_password }}"
