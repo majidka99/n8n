@@ -15,11 +15,11 @@ server {
     client_max_body_size 10M;
     client_body_buffer_size 128k;
     client_header_buffer_size 1k;
-    limit_except GET POST { deny all; }
     access_log /var/log/nginx/n8n_access.log;
     error_log /var/log/nginx/n8n_error.log;
 
     location / {
+        limit_except GET POST { deny all; }
         proxy_pass http://localhost:5678;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
