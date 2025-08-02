@@ -1,26 +1,48 @@
+
 # docker/tasks/main.yml
 # Hardened Docker setup for n8n
 
-- name: Add Docker APT repository GPG key
-  apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-  become: true
-
-- name: Add Docker APT repository
-  apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-    state: present
-    filename: docker
-  become: true
-
-- name: Install pinned Docker Engine and Compose plugin
+- name: Ensure required packages for apt over HTTPS are installed
   apt:
     name:
-      - "docker-ce={{ docker_engine_version }}"
-      - "docker-ce-cli={{ docker_engine_version }}"
-      - "containerd.io={{ containerd_version }}"
-      - "docker-compose-plugin={{ docker_compose_plugin_version }}"
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Create Docker keyrings directory
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Add Docker GPG key to keyring
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /usr/share/keyrings/docker-archive-keyring.gpg
+    mode: '0644'
+  become: true
+
+- name: Add Docker apt repository
+  apt_repository:
+    repo: |
+      deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+    filename: docker
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Install Docker Engine, CLI, containerd and Compose plugin
+  apt:
+    name:
+      - docker-ce={{ docker_engine_version }}
+      - docker-ce-cli={{ docker_engine_version }}
+      - containerd.io={{ containerd_version }}
+      - docker-compose-plugin={{ docker_compose_plugin_version }}
     state: present
     update_cache: yes
   become: true
