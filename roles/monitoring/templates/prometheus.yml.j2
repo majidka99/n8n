@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+rule_files:
+  - "/etc/prometheus/alert.rules.d/*.yml"
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['localhost:8080']
+  - job_name: 'n8n_healthz'
+    metrics_path: /healthz
+    static_configs:
+      - targets: ['{{ n8n_host }}:{{ n8n_port }}']

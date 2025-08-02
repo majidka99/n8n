@@ -1,0 +1,59 @@
+# n8n/tasks/main.yml
+# Deploy n8n via Docker Compose with best practices
+
+- name: Ensure n8n data volume exists
+  community.docker.docker_volume:
+    name: n8n_data
+    state: present
+  become: true
+
+- name: Deploy n8n with Docker Compose
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/n8n/docker-compose.yml
+    owner: root
+    group: root
+    mode: 0640
+  become: true
+
+- name: Start n8n container
+  community.docker.docker_compose:
+    project_src: /opt/n8n
+    restarted: true
+  become: true
+
+# Optionally, add a task to seed the admin user if n8n supports it via env or init script- name: Ensure n8n Docker image is pulled
+  docker_image:
+    name: n8n
+    tag: latest
+    source: pull
+
+- name: Create a Docker network for n8n
+  docker_network:
+    name: n8n-network
+    state: present
+
+- name: Start n8n container
+  docker_container:
+    name: n8n
+    image: n8n:latest
+    state: started
+    restart_policy: always
+    env:
+      N8N_HOST: "n8n.majitask.fun"
+      N8N_PORT: 5678
+      N8N_PROTOCOL: "https"
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: "{{ n8n_basic_auth_user }}"
+      N8N_BASIC_AUTH_PASSWORD: "{{ n8n_basic_auth_password }}"
+    ports:
+      - "5678:5678"
+    networks:
+      - n8n-network
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+- name: Ensure n8n data volume is created
+  docker_volume:
+    name: n8n_data
+    state: present

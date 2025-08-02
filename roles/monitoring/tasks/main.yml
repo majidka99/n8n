@@ -1,0 +1,137 @@
+---
+# Deploy monitoring stack for n8n
+- name: Ensure Docker is installed
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+  when: monitoring_enable_node_exporter or monitoring_enable_cadvisor
+
+- name: Deploy node exporter via Docker
+  docker_container:
+    name: node-exporter
+    image: prom/node-exporter:latest
+    ports:
+      - "127.0.0.1:9100:9100"
+    restart_policy: unless-stopped
+    state: started
+  when: monitoring_enable_node_exporter
+
+- name: Deploy cAdvisor via Docker
+  docker_container:
+    name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart_policy: unless-stopped
+    state: started
+  when: monitoring_enable_cadvisor
+
+- name: Install Monit (optional)
+  apt:
+    name: monit
+    state: present
+    update_cache: yes
+  when: monitoring_enable_monit
+
+- name: Configure Monit (optional)
+  template:
+    src: monitrc.j2
+    dest: /etc/monit/monitrc
+    owner: root
+    group: root
+    mode: 0700
+  notify: Restart monit
+  when: monitoring_enable_monit
+
+- name: Deploy Prometheus server via Docker (optional)
+  docker_container:
+    name: prometheus
+    image: prom/prometheus:latest
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - /etc/prometheus:/etc/prometheus
+    restart_policy: unless-stopped
+    state: started
+    env:
+      - TZ=Europe/Prague
+  when: monitoring_enable_prometheus
+
+- name: Deploy Alertmanager via Docker (optional)
+  docker_container:
+    name: alertmanager
+    image: prom/alertmanager:latest
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - /etc/alertmanager:/etc/alertmanager
+    restart_policy: unless-stopped
+    state: started
+  when: monitoring_enable_alertmanager
+
+- name: Configure Prometheus
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload prometheus
+  when: monitoring_enable_prometheus
+
+- name: Configure Alertmanager
+  template:
+    src: alertmanager.yml.j2
+    dest: /etc/alertmanager/alertmanager.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload alertmanager
+  when: monitoring_enable_alertmanager
+
+- name: Add n8n health alert rule
+  template:
+    src: n8n_health_alert.yml.j2
+    dest: /etc/prometheus/alert.rules.d/n8n_health_alert.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload prometheus
+  when: monitoring_enable_prometheus
+
+- name: Install and configure log shipper (Filebeat/Vector)
+  include_tasks: log_shipper.yml
+  when: monitoring_enable_log_shipper
+
+- name: Configure n8n logging environment variables
+  block:
+    - name: Ensure n8n log directory exists
+      file:
+        path: "{{ n8n_log_file_location | dirname }}"
+        state: directory
+        owner: "1000"
+        group: "1000"
+        mode: 0755
+    - name: Set n8n logging environment variables
+      lineinfile:
+        path: /etc/environment
+        regexp: '^{{ item.key }}='
+        line: '{{ item.key }}={{ item.value }}'
+        create: yes
+      loop:
+        - { key: 'N8N_LOG_LEVEL', value: '{{ n8n_log_level }}' }
+        - { key: 'N8N_LOG_OUTPUT', value: '{{ n8n_log_output }}' }
+        - { key: 'N8N_LOG_FILE_LOCATION', value: '{{ n8n_log_file_location }}' }
+        - { key: 'N8N_LOG_FILE_MAXSIZE', value: '{{ n8n_log_file_maxsize }}' }
+        - { key: 'N8N_LOG_FILE_MAXCOUNT', value: '{{ n8n_log_file_maxcount }}' }
+  when: monitoring_enable_n8n_logging | default(true)
+
+- name: Configure Nginx proxy for monitoring services
+  include_tasks: nginx_monitoring.yml
+  when: monitoring_enable_nginx_proxy | default(false)

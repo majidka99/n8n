@@ -1,0 +1,11 @@
+- name: Reload NGINX
+  service:
+    name: nginx
+    state: reloaded
+  when: nginx_config_changed
+
+- name: Restart NGINX
+  service:
+    name: nginx
+    state: restarted
+  when: nginx_service_changed

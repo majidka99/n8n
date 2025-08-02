@@ -1,0 +1,130 @@
+---
+# System hardening for n8n host
+- name: Install fail2ban
+  apt:
+    name: fail2ban
+    state: present
+    update_cache: yes
+
+- name: Configure fail2ban
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart fail2ban
+
+- name: Ensure fail2ban is running
+  service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Block direct access to monitoring ports
+  ufw:
+    rule: deny
+    port: "{{ item }}"
+    comment: "Block direct access to monitoring"
+  loop:
+    - "9090"  # Prometheus
+    - "9093"  # Alertmanager
+    - "8080"  # cAdvisor
+    - "9100"  # Node Exporter
+  when: enable_monitoring | default(false)
+
+- name: Install AIDE (host IDS)
+  apt:
+    name: aide
+    state: present
+    update_cache: yes
+  when: hardening_enable_aide
+
+- name: Initialize AIDE database
+  command: aideinit
+  args:
+    creates: /var/lib/aide/aide.db.new
+  when: hardening_enable_aide
+
+- name: Schedule daily AIDE check
+  cron:
+    name: "AIDE daily integrity check"
+    user: root
+    job: "/usr/bin/aide.wrapper --check | mail -s 'AIDE Integrity Check' {{ hardening_alert_email }}"
+    state: present
+  when: hardening_enable_aide
+
+- name: Install unattended-upgrades for automatic security updates
+  apt:
+    name: unattended-upgrades
+    state: present
+    update_cache: yes
+
+- name: Ensure automatic security updates are enabled
+  copy:
+    src: unattended-upgrades
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install ModSecurity for Nginx (optional)
+  apt:
+    name: libnginx-mod-security
+    state: present
+    update_cache: yes
+  when: hardening_enable_modsecurity and hardening_reverse_proxy == 'nginx'
+
+- name: Enable ModSecurity in Nginx config
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: '^\s*modsecurity\s+on;'
+    line: 'modsecurity on;'
+    insertafter: 'http {'
+  notify: Reload nginx
+  when: hardening_enable_modsecurity and hardening_reverse_proxy == 'nginx'
+
+- name: Ensure Nginx is hardened (see docs)
+  debug:
+    msg: "Nginx hardening is handled in reverse_proxy role."
+
+- name: Run docker bench security
+  shell: |
+    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc:ro -v /usr/bin/docker:/usr/bin/docker:ro --network host docker/docker-bench-security > /var/log/security/docker-bench-security.log
+  args:
+    creates: /var/log/security/docker-bench-security.log
+  when: hardening_enable_docker_bench
+
+- name: Run Lynis scan
+  shell: |
+    lynis audit system --quiet > /var/log/security/lynis.log
+  args:
+    creates: /var/log/security/lynis.log
+  when: hardening_enable_lynis
+
+- name: Schedule daily Lynis scan
+  cron:
+    name: "Lynis daily scan"
+    user: root
+    job: "/usr/bin/lynis audit system --quiet | mail -s 'Lynis Security Scan' {{ hardening_alert_email }}"
+    state: present
+  when: hardening_enable_lynis
+
+- name: Run n8n security audit (CLI)
+  shell: |
+    n8n audit > /var/log/n8n/n8n-audit-report.json
+  args:
+    creates: /var/log/n8n/n8n-audit-report.json
+  register: n8n_audit_result
+  failed_when: false
+  changed_when: false
+  tags:
+    - n8n_audit
+  when: hardening_enable_n8n_audit | default(true)
+
+- name: Warn if n8n audit report not generated
+  debug:
+    msg: "WARNING: n8n audit report was not generated. Ensure n8n CLI is available on the host."
+  when: n8n_audit_result.rc != 0 and hardening_enable_n8n_audit | default(true)
+
+# OpenSCAP and OpenVAS can be added similarly if required

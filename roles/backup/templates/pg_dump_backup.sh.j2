@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+DATE=$(date +%Y%m%d)
+PG_DUMP_DIR={{ backup_pg_dump_dir }}
+mkdir -p $PG_DUMP_DIR
+sudo docker exec postgres pg_dump -U {{ n8n_database_user }} {{ n8n_database_name }} > $PG_DUMP_DIR/n8n_pg_backup_${DATE}.sql

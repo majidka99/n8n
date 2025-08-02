@@ -1,0 +1,7 @@
+---
+# user_access/handlers/main.yml
+
+- name: reload sudoers
+  command: sudo /usr/sbin/service sudo restart || true
+  listen: reload sudoers
+  become: true

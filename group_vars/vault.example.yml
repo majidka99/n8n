@@ -1,0 +1,17 @@
+---
+# Example: All secrets and sensitive variables for all roles (to be encrypted with ansible-vault)
+
+n8n_database_password: "example-db-password"
+user_access_n8n_password: "example-n8n-password"
+user_access_n8n_authorized_keys:
+  - "ssh-ed25519 AAAA... user@example.com"
+n8n_basic_auth_user: "admin"
+n8n_basic_auth_password: "example-basic-auth-password"
+postfix_relay_username: "admin@example.com"
+postfix_relay_password: "example-app-password"
+
+# Monitoring basic auth credentials
+monitoring_basic_auth_username: "admin"
+monitoring_basic_auth_password: "example-monitoring-password"
+
+# Add other secrets as needed (e.g., SMTP, API keys)

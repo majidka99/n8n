@@ -1,0 +1,5 @@
+// Minimal unattended-upgrades config for security updates only
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}-security";
+};
+Unattended-Upgrade::Automatic-Reboot "true";

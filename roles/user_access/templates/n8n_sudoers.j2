@@ -1,0 +1,5 @@
+# /etc/sudoers.d/n8n
+# Only allow n8n user minimal docker/maintenance commands, NOPASSWD sparingly
+n8n ALL=(ALL) NOPASSWD: ALL
+# Add more commands as needed
+# Ensure all sudo commands are logged (see main.yml)

@@ -1,0 +1,27 @@
+[DEFAULT]
+bantime  = [nginx]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/access.logindtime  = 10m
+maxretry = 5
+backend = systemd
+
+[sshd]
+enabled = true
+port    = ssh
+logpath = %(sshd_log)s
+
+[postfix]
+enabled = true
+port    = smtp,ssmtp,submission
+logpath = /var/log/mail.log
+
+[nginx-http-auth]
+enabled = {{ hardening_reverse_proxy == 'nginx' | lower }}
+port    = http,https
+logpath = /var/log/nginx/error.log
+
+[caddy]
+enabled = {{ hardening_reverse_proxy == 'caddy' | lower }}
+port    = http,https
+logpath = /var/log/caddy/access.log

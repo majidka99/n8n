@@ -1,0 +1,15 @@
+---
+- name: Restart monit
+  service:
+    name: monit
+    state: restarted
+
+- name: Reload prometheus
+  docker_container:
+    name: prometheus
+    state: reloaded
+
+- name: Reload alertmanager
+  docker_container:
+    name: alertmanager
+    state: reloaded

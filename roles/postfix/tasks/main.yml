@@ -1,0 +1,61 @@
+---
+# Install Postfix in satellite mode and configure relay
+- name: Install postfix and required packages
+  apt:
+    name:
+      - postfix
+      - libsasl2-modules
+      - mailutils
+      - logwatch
+    state: present
+    update_cache: yes
+
+- name: Configure postfix main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart postfix
+
+- name: Configure postfix sasl_passwd
+  template:
+    src: sasl_passwd.j2
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: 0600
+  notify: Restart postfix
+
+- name: Postmap sasl_passwd
+  command: postmap /etc/postfix/sasl_passwd
+  args:
+    creates: /etc/postfix/sasl_passwd.db
+  notify: Restart postfix
+
+- name: Ensure postfix can read sasl_passwd.db
+  file:
+    path: /etc/postfix/sasl_passwd.db
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Configure logwatch for postfix
+  template:
+    src: logwatch.conf.j2
+    dest: /etc/logwatch/conf/logwatch.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure logwatch daily cron
+  cron:
+    name: "logwatch daily report"
+    user: root
+    job: "/usr/sbin/logwatch --output mail --mailto={{ postfix_logwatch_email }} --detail high"
+    state: present
+
+- name: DKIM guidance (see docs)
+  debug:
+    msg: "See role documentation for DKIM setup guidance."

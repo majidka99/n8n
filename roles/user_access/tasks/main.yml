@@ -1,0 +1,71 @@
+# user_access/tasks/main.yml
+# Provisions and hardens n8n user access. Variables from group_vars/vars.yml, secrets from vault.yml
+
+- name: Ensure n8n group exists
+  group:
+    name: n8n
+    state: present
+  become: true
+
+- name: Ensure n8n user exists with no shell login by default
+  user:
+    name: n8n
+    group: n8n
+    shell: /usr/sbin/nologin
+    create_home: yes
+    state: present
+  become: true
+
+- name: Add n8n user to docker group if needed
+  user:
+    name: n8n
+    groups: docker
+    append: yes
+  when: user_access_add_to_docker | default(true)
+  become: true
+
+- name: Set fallback password for n8n user from Vault
+  user:
+    name: n8n
+    password: "{{ user_access_n8n_password | password_hash('sha512') }}"
+    update_password: always
+  become: true
+
+- name: Ensure .ssh directory exists for n8n
+  file:
+    path: /home/n8n/.ssh
+    state: directory
+    owner: n8n
+    group: n8n
+    mode: 0700
+  become: true
+
+- name: Set authorized_keys for n8n from Vault
+  copy:
+    content: "{{ user_access_n8n_authorized_keys | join('\n') }}\n"
+    dest: /home/n8n/.ssh/authorized_keys
+    owner: n8n
+    group: n8n
+    mode: 0600
+  become: true
+
+- name: Deploy sudoers file for n8n
+  template:
+    src: n8n_sudoers.j2
+    dest: /etc/sudoers.d/n8n
+    owner: root
+    group: root
+    mode: 0440
+    validate: 'visudo -cf %s'
+  notify: reload sudoers
+  become: true
+
+- name: Ensure sudo logs all commands
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^Defaults\s+logfile='
+    line: 'Defaults logfile="/var/log/sudo.log"'
+    state: present
+    validate: 'visudo -cf %s'
+  notify: reload sudoers
+  become: true

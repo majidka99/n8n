@@ -1,0 +1,34 @@
+---
+- name: Install Filebeat (optional)
+  apt:
+    name: filebeat
+    state: present
+    update_cache: yes
+  when: monitoring_log_shipper == 'filebeat'
+
+- name: Configure Filebeat
+  template:
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart filebeat
+  when: monitoring_log_shipper == 'filebeat'
+
+- name: Install Vector (optional)
+  apt:
+    name: vector
+    state: present
+    update_cache: yes
+  when: monitoring_log_shipper == 'vector'
+
+- name: Configure Vector
+  template:
+    src: vector.toml.j2
+    dest: /etc/vector/vector.toml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart vector
+  when: monitoring_log_shipper == 'vector'

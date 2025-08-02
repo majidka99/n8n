@@ -1,0 +1,39 @@
+server {
+    listen 80;
+    server_name {{ monitoring_prometheus_domain }};
+    
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload";
+    
+    location / {
+{% if monitoring_enable_basic_auth | default(false) %}
+        auth_basic "Prometheus Monitoring";
+        auth_basic_user_file /etc/nginx/.htpasswd_monitoring;
+{% endif %}
+        
+        proxy_pass http://127.0.0.1:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Increase timeouts for long-running queries
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+    
+    # Health check endpoint (no auth required)
+    location /-/healthy {
+        proxy_pass http://127.0.0.1:9090/-/healthy;
+        access_log off;
+    }
+}

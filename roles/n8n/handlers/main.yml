@@ -1,0 +1,11 @@
+- name: Restart n8n service
+  service:
+    name: n8n
+    state: restarted
+  when: n8n_service_changed
+
+- name: Reload NGINX
+  service:
+    name: nginx
+    state: reloaded
+  when: nginx_config_changed

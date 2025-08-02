@@ -1,0 +1,37 @@
+- name: Ensure NGINX is installed
+  apt:
+    name: nginx
+    state: present
+
+- name: Copy NGINX configuration for n8n
+  template:
+    src: n8n.conf.j2
+    dest: /etc/nginx/sites-available/n8n.conf
+  notify: Reload NGINX
+
+- name: Create a symlink for NGINX configuration
+  file:
+    src: /etc/nginx/sites-available/n8n.conf
+    dest: /etc/nginx/sites-enabled/n8n.conf
+    state: link
+
+- name: Remove default NGINX configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Ensure NGINX is running
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Check NGINX configuration
+  command: nginx -t
+  register: nginx_test
+  ignore_errors: yes
+
+- name: Fail if NGINX configuration is invalid
+  fail:
+    msg: "NGINX configuration is invalid: {{ nginx_test.stderr }}"
+  when: nginx_test.rc != 0

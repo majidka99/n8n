@@ -1,0 +1,86 @@
+---
+# Example: Centralized variables for all roles (non-secrets)
+
+n8n_domain: "example.com"
+n8n_admin_email: "admin@example.com"
+n8n_database_type: "postgresdb"
+n8n_database_host: "localhost"
+n8n_database_port: 5432
+n8n_database_user: "n8n_user"
+n8n_database_name: "n8n"
+n8n_webhook_url: "https://example.com/"
+docker_version: "20.10.7"
+docker_compose_version: "1.29.2"
+docker_service_name: "docker"
+backup_dir: "/archive/backup/n8n"
+backup_pg_dump_dir: "/archive/backup/n8n/pg_dumps"
+backup_script_path: "/usr/local/bin/n8n_stack_backup.sh"
+backup_pg_dump_script_path: "/usr/local/bin/n8n_pg_dump_backup.sh"
+backup_upload_script_path: "/usr/local/bin/n8n_upload_offsite.sh"
+backup_log_path: "/var/log/n8n_backup.log"
+backup_keep_count: 2
+backup_offsite_enabled: false
+backup_notify_email: "admin@example.com"
+reverse_proxy_type: "nginx"
+n8n_image_tag: "latest"
+n8n_port: 5678
+postgresql_image_tag: "15"
+postgresql_backup_dir: "/archive/backup/n8n/postgres"
+postgresql_listen_addresses: "127.0.0.1"
+postgresql_ssl: "off"
+postfix_relay_provider: "gmail"
+postfix_relay_host: "smtp.gmail.com"
+postfix_relay_port: 587
+postfix_logwatch_email: "admin@example.com"
+enable_monitoring: true
+monitoring_enable_node_exporter: true
+monitoring_enable_cadvisor: true
+monitoring_enable_monit: false
+monitoring_enable_prometheus: true
+monitoring_enable_alertmanager: true
+monitoring_enable_log_shipper: false
+monitoring_log_shipper: "filebeat"
+monitoring_log_aggregation_host: "localhost"
+monitoring_log_aggregation_port: 3100
+# Monitoring role variables
+enable_monitoring: true
+monitoring_enable_node_exporter: true
+monitoring_enable_cadvisor: true
+monitoring_enable_monit: false
+monitoring_enable_prometheus: true
+monitoring_enable_alertmanager: true
+monitoring_enable_log_shipper: false
+monitoring_log_shipper: "filebeat"
+monitoring_log_aggregation_host: "localhost"
+monitoring_log_aggregation_port: 3100
+monitoring_alert_email_from: "admin@example.com"
+monitoring_alert_email_to: "admin@example.com"
+n8n_host: "localhost"
+n8n_port: 5678
+
+# Monitoring subdomain configuration
+monitoring_prometheus_domain: "prometheus.example.com"
+monitoring_alertmanager_domain: "alerts.example.com"
+monitoring_enable_nginx_proxy: true
+monitoring_enable_basic_auth: true
+monitoring_enable_n8n_logging: true
+n8n_log_level: "info"
+n8n_log_output: "console,file"
+n8n_log_file_location: "/var/log/n8n/n8n.log"
+n8n_log_file_maxsize: 50
+n8n_log_file_maxcount: 60
+hardening_enable_aide: true
+hardening_enable_modsecurity: true
+hardening_enable_docker_bench: true
+hardening_enable_lynis: true
+hardening_reverse_proxy: "nginx"
+hardening_alert_email: "admin@example.com"
+hardening_enable_n8n_audit: true
+dns_locale_lang: "en_US.UTF-8"
+dns_locale_timezone: "UTC"
+n8n_public_ip: "203.0.113.1"
+dns_locale_mx_target: "smtp.example.com."
+n8n_domain: "n8n.example.com"           # Your n8n domain
+dns_admin_email: "admin@example.com"    # Admin/notification email for DNS records
+dkim_public_key: "EXAMPLE_DKIM_PUBLIC_KEY"
+ dmarc_rua_email: "admin@example.com"    # Aggregate report email for DMARC

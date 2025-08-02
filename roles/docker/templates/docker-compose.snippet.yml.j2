@@ -1,0 +1,37 @@
+# Example hardened Compose service for n8n
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    user: "1000:1000"
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined  # Replace with a custom seccomp profile for production
+      - apparmor:docker-default
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - GENERIC_TIMEZONE=Europe/Prague
+      # ...other env vars
+  postgres:
+    image: postgres:latest
+    user: "1000:1000"
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined
+      - apparmor:docker-default
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=n8n
+      # ...other env vars
+volumes:
+  n8n_data:
+  pg_data:

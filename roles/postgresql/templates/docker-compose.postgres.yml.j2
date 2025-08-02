@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:{{ postgresql_image_tag | default('latest') }}
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "{{ n8n_database_user }}"
+      POSTGRES_PASSWORD: "{{ n8n_database_password }}"
+      POSTGRES_DB: "{{ n8n_database_name }}"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf
+    command: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
+    ports:
+      - "5432:5432"
+volumes:
+  pg_data:
+# To use a managed service, replace this Compose file with connection info in vars/vault.

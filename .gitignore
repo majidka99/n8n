@@ -1,0 +1,12 @@
+# Ignore Ansible Vault password file
+.vault_pass.txt
+
+# Ignore group_vars files containing secrets or environment-specific data
+group_vars/vars.yml
+group_vars/vault.yml
+
+# molecule-venv - virtual environment for molecule testing
+molecule-venv/
+
+# Ignore testing_scripts for now as they are not done.
+testing_scripts

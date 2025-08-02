@@ -1,0 +1,21 @@
+---
+- name: n8n Full Stack Deployment
+  hosts: n8n_host
+  become: true
+  vars_files:
+    - ../group_vars/vars.yml
+    - ../group_vars/vault.yml
+  roles:
+    - { role: system_update, tags: [system_update] }
+    - { role: user_access, tags: [user_access] }
+    - { role: docker, tags: [docker] }
+    - { role: postgresql, tags: [postgresql] }
+    - { role: n8n, tags: [n8n] }
+    - { role: reverse_proxy, tags: [reverse_proxy] }
+    - { role: backup, tags: [backup] }
+    - { role: ufw, tags: [ufw] }
+    - { role: postfix, tags: [postfix] }
+    - { role: monitoring, tags: [monitoring] }
+    - { role: hardening, tags: [hardening] }
+    - { role: dns_locale, tags: [dns_locale] }
+    - { role: vault, tags: [vault] }

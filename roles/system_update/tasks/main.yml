@@ -1,0 +1,128 @@
+
+# system_update/tasks/main.yml
+# Idempotent hardening for Ubuntu/Debian
+# Variables are sourced from group_vars/vars.yml
+
+- name: Purge unnecessary packages
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: yes
+  loop: "{{ system_update_purge_packages }}"
+  when: system_update_purge_packages | length > 0
+  become: true
+  tags: purge
+
+- name: Disable unnecessary services
+  service:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+  loop: "{{ system_update_disable_services }}"
+  when: system_update_disable_services | length > 0
+  become: true
+  tags: disable_services
+
+- name: Install required packages
+  apt:
+    name:
+      - unattended-upgrades
+      - ntp
+      - fail2ban
+    state: present
+    update_cache: yes
+  become: true
+  tags: packages
+
+- name: Configure unattended-upgrades
+  copy:
+    src: unattended-upgrades
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart unattended-upgrades
+  become: true
+  tags: unattended
+
+- name: Enable and start unattended-upgrades
+  systemd:
+    name: unattended-upgrades
+    enabled: yes
+    state: started
+  become: true
+  tags: unattended
+
+- name: Set timezone
+  timezone:
+    name: Europe/Prague
+  become: true
+  tags: timezone
+
+- name: Ensure ntp is enabled and started
+  systemd:
+    name: ntp
+    enabled: yes
+    state: started
+  become: true
+  tags: ntp
+
+- name: Harden SSH config
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^{{ item.regexp }}'
+    line: '{{ item.line }}'
+    state: present
+    backrefs: yes
+  loop:
+    - { regexp: 'PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regexp: 'PermitRootLogin', line: 'PermitRootLogin no' }
+    - { regexp: 'Port', line: 'Port {{ system_update_ssh_port }}' }
+  notify: restart ssh
+  become: true
+  tags: ssh
+
+- name: Ensure SSH uses only public key authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^AuthenticationMethods'
+    line: 'AuthenticationMethods publickey'
+    state: present
+    backrefs: yes
+  notify: restart ssh
+  become: true
+  tags: ssh
+
+- name: Ensure SSH service is enabled
+  systemd:
+    name: ssh
+    enabled: yes
+    state: started
+  become: true
+  tags: ssh
+
+- name: Configure fail2ban (jail.local)
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart fail2ban
+  become: true
+  tags: fail2ban
+
+- name: Ensure fail2ban is enabled and started
+  systemd:
+    name: fail2ban
+    enabled: yes
+    state: started
+  become: true
+  tags: fail2ban
+
+# Optional: VM snapshot or backup (infrastructure-specific)
+- name: Take VM snapshot (optional)
+  debug:
+    msg: 'Snapshot/backup task placeholder. Implement as needed.'
+  when: system_update_snapshot_enabled | default(false)
+  tags: snapshot

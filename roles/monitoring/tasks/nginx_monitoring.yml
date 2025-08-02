@@ -1,0 +1,54 @@
+---
+# Configure Nginx proxy for monitoring services
+
+- name: Create basic auth file for monitoring
+  htpasswd:
+    path: /etc/nginx/.htpasswd_monitoring
+    name: "{{ monitoring_basic_auth_username }}"
+    password: "{{ monitoring_basic_auth_password }}"
+    owner: root
+    group: www-data
+    mode: 0640
+  when: monitoring_enable_basic_auth | default(false)
+
+- name: Create Nginx config for Prometheus subdomain
+  template:
+    src: prometheus.conf.j2
+    dest: /etc/nginx/sites-available/prometheus.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload nginx
+  when: monitoring_enable_prometheus
+
+- name: Enable Prometheus site
+  file:
+    src: /etc/nginx/sites-available/prometheus.conf
+    dest: /etc/nginx/sites-enabled/prometheus.conf
+    state: link
+  notify: Reload nginx
+  when: monitoring_enable_prometheus
+
+- name: Create Nginx config for Alertmanager subdomain
+  template:
+    src: alertmanager.conf.j2
+    dest: /etc/nginx/sites-available/alertmanager.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload nginx
+  when: monitoring_enable_alertmanager
+
+- name: Enable Alertmanager site
+  file:
+    src: /etc/nginx/sites-available/alertmanager.conf
+    dest: /etc/nginx/sites-enabled/alertmanager.conf
+    state: link
+  notify: Reload nginx
+  when: monitoring_enable_alertmanager
+
+- name: Obtain SSL certificates for monitoring subdomains
+  shell: |
+    certbot --nginx -d {{ monitoring_prometheus_domain }} --non-interactive --agree-tos -m {{ n8n_admin_email }} --redirect
+    certbot --nginx -d {{ monitoring_alertmanager_domain }} --non-interactive --agree-tos -m {{ n8n_admin_email }} --redirect
+  when: monitoring_enable_prometheus and monitoring_enable_alertmanager

@@ -1,0 +1,13 @@
+---
+# reverse_proxy/handlers/main.yml
+- name: reload caddy
+  systemd:
+    name: caddy
+    state: reloaded
+  become: true
+
+- name: reload nginx
+  systemd:
+    name: nginx
+    state: reloaded
+  become: true

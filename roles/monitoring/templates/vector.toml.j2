@@ -1,0 +1,25 @@
+[sources.nginx]
+type = "file"
+include = ["/var/log/nginx/*.log"]
+
+[sources.nginx]
+type = "file"
+include = ["/var/log/nginx/*.log"]
+
+[sources.postgresql]
+type = "file"
+include = ["/var/log/postgresql/*.log"]
+
+[sources.syslog]
+type = "file"
+include = ["/var/log/syslog"]
+
+[sources.auth]
+type = "file"
+include = ["/var/log/auth.log"]
+
+[sinks.log_aggregation]
+type = "socket"
+inputs = ["nginx", "postgresql", "syslog", "auth"]
+address = "{{ monitoring_log_aggregation_host }}:{{ monitoring_log_aggregation_port }}"
+mode = "tcp"

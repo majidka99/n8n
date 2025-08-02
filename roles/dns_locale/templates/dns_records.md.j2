@@ -1,0 +1,33 @@
+# DNS Records for n8n Deployment
+
+> **Checklist: Update these values before running the playbook!**
+> - Change all example domains (e.g., {{ n8n_domain }}) to your real domain.
+> - Set your server's public IP for `n8n_public_ip`.
+> - Set the correct MX target for `dns_locale_mx_target`.
+> - Change all example emails (e.g., example@example.com) to your real admin/notification email.
+> - Replace `p=...` in DKIM with your generated public key.
+
+## A/CNAME Record
+- **Type:** A or CNAME
+- **Name:** {{ n8n_domain }}
+- **Value:** {{ n8n_public_ip }}
+
+## MX Record
+- **Type:** MX
+- **Name:** {{ n8n_domain }}
+- **Value:** {{ dns_locale_mx_target }}
+
+## SPF Record (TXT)
+```
+{{ n8n_domain }}. IN TXT "v=spf1 include:_spf.google.com ~all"
+```
+
+## DKIM Record (TXT)
+```
+default._domainkey.{{ n8n_domain }}. IN TXT "v=DKIM1; k=rsa; p={{ dkim_public_key }}"
+```
+
+## DMARC Record (TXT)
+```
+_dmarc.{{ n8n_domain }}. IN TXT "v=DMARC1; p=quarantine; rua=mailto:{{ dmarc_rua_email }}"
+```

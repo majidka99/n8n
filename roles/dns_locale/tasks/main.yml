@@ -1,0 +1,52 @@
+---
+# Configure DNS and locale for n8n deployment
+- name: Show DNS record instructions
+  template:
+    src: dns_records.md.j2
+    dest: /etc/n8n-dns-records.md
+    mode: 0644
+
+- name: Install locale packages
+  apt:
+    name:
+      - locales
+      - tzdata
+    state: present
+    update_cache: yes
+
+- name: Generate locale if missing
+  command: locale-gen {{ dns_locale_lang }}
+  args:
+    creates: "/usr/lib/locale/{{ dns_locale_lang }}"
+
+- name: Set system locale
+  lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: 'LANG={{ dns_locale_lang }}'
+  notify: Restart locale-dependent services
+
+- name: Set timezone
+  command: timedatectl set-timezone {{ dns_locale_timezone }}
+  when: dns_locale_timezone is defined
+  notify: Restart locale-dependent services
+
+- name: Verify DNS A/CNAME record
+  shell: "getent ahosts {{ n8n_domain }} | grep -q {{ n8n_public_ip }}"
+  register: dns_acname_check
+  ignore_errors: true
+
+- name: Warn if A/CNAME record does not resolve
+  debug:
+    msg: "WARNING: {{ n8n_domain }} does not resolve to {{ n8n_public_ip }}. Please update your DNS."
+  when: dns_acname_check.rc != 0
+
+- name: Verify MX record
+  shell: "dig +short MX {{ n8n_domain }} | grep -q {{ dns_locale_mx_target }}"
+  register: dns_mx_check
+  ignore_errors: true
+
+- name: Warn if MX record does not resolve
+  debug:
+    msg: "WARNING: MX record for {{ n8n_domain }} does not point to {{ dns_locale_mx_target }}."
+  when: dns_mx_check.rc != 0

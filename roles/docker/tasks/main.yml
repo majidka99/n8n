@@ -1,0 +1,208 @@
+# docker/tasks/main.yml
+# Hardened Docker setup for n8n
+
+- name: Add Docker APT repository GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: true
+
+- name: Add Docker APT repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+  become: true
+
+- name: Install pinned Docker Engine and Compose plugin
+  apt:
+    name:
+      - "docker-ce={{ docker_engine_version }}"
+      - "docker-ce-cli={{ docker_engine_version }}"
+      - "containerd.io={{ containerd_version }}"
+      - "docker-compose-plugin={{ docker_compose_plugin_version }}"
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Ensure docker group exists
+  group:
+    name: docker
+    state: present
+  become: true
+
+- name: Add n8n user to docker group, remove others
+  user:
+    name: n8n
+    groups: docker
+    append: no
+  become: true
+
+- name: Configure Docker daemon for Unix socket only
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart docker
+  become: true
+
+- name: Ensure Docker is enabled and started
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+  become: true
+
+- name: Pull n8nio/n8n and postgres images
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  loop:
+    - n8nio/n8n:latest
+    - postgres:latest
+  become: true
+
+# Image signature verification and vulnerability scanning should be done in CI, not on host.
+# Example (in CI):
+#   cosign verify --key cosign.pub docker.io/n8nio/n8n:latest
+#   trivy image docker.io/n8nio/n8n:latest
+#   dockle docker.io/n8nio/n8n:latest
+
+# Compose/service security: see templates/docker-compose.snippet.yml.j2 for best practices.
+- name: Install required packages for Docker
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+    state: present
+
+- name: Add Docker's official GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker APT repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker-ce
+    state: latest
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add user to the Docker group
+  user:
+    name: "{{ ansible_user }}"
+    group: docker
+    append: yes
+
+- name: Install Docker Compose
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)"
+    dest: /usr/local/bin/docker-compose
+    mode: 'u+x'
+
+---
+# Install Docker and Docker Compose
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+  tags: [docker]
+
+- name: Install Docker Compose
+  apt:
+    name: docker-compose
+    state: present
+    update_cache: yes
+  tags: [docker]
+
+- name: Pull n8n Docker image
+  docker_image:
+    name: "n8nio/n8n"
+    tag: "{{ n8n_image_tag | default('latest') }}"
+    source: pull
+    platform: "{{ n8n_docker_platform | default('linux/amd64') }}"
+  tags: [docker, n8n]
+
+- name: Create n8n data directory
+  file:
+    path: /home/node/.n8n
+    state: directory
+    owner: 1000
+    group: 1000
+    mode: 0755
+  tags: [docker, n8n]
+
+- name: Render docker-entrypoint.sh
+  template:
+    src: docker-entrypoint.sh.j2
+    dest: /docker-entrypoint.sh
+    owner: root
+    group: root
+    mode: 0755
+  tags: [docker, n8n]
+  become: true
+
+- name: Render n8n-task-runners.json
+  template:
+    src: n8n-task-runners.json.j2
+    dest: /etc/n8n-task-runners.json
+    owner: root
+    group: root
+    mode: 0644
+  tags: [docker, n8n]
+  become: true
+
+- name: Deploy n8n container
+  docker_container:
+    name: n8n
+    image: "n8nio/n8n:{{ n8n_image_tag | default('latest') }}"
+    restart_policy: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "{{ n8n_port }}:5678"
+    env:
+      N8N_BASIC_AUTH_USER: "{{ n8n_basic_auth_user }}"
+      N8N_BASIC_AUTH_PASSWORD: "{{ n8n_basic_auth_password }}"
+      N8N_LOG_LEVEL: "{{ n8n_log_level | default('info') }}"
+      N8N_LOG_OUTPUT: "{{ n8n_log_output | default('console,file') }}"
+      N8N_LOG_FILE_LOCATION: "{{ n8n_log_file_location | default('/var/log/n8n/n8n.log') }}"
+      N8N_LOG_FILE_MAXSIZE: "{{ n8n_log_file_maxsize | default(50) }}"
+      N8N_LOG_FILE_MAXCOUNT: "{{ n8n_log_file_maxcount | default(60) }}"
+      N8N_PORT: "{{ n8n_port }}"
+      N8N_HOST: "{{ n8n_host | default('localhost') }}"
+      N8N_PROTOCOL: "https"
+      N8N_DOMAIN: "{{ n8n_domain }}"
+      GENERIC_TIMEZONE: "{{ dns_locale_timezone | default('Europe/Prague') }}"
+      DB_TYPE: "{{ n8n_database_type }}"
+      DB_POSTGRESDB_HOST: "{{ n8n_database_host }}"
+      DB_POSTGRESDB_PORT: "{{ n8n_database_port }}"
+      DB_POSTGRESDB_DATABASE: "{{ n8n_database_name }}"
+      DB_POSTGRESDB_USER: "{{ n8n_database_user }}"
+      DB_POSTGRESDB_PASSWORD: "{{ n8n_database_password }}"
+      WEBHOOK_URL: "{{ n8n_webhook_url }}"
+    volumes:
+      - /home/node/.n8n:/home/node/.n8n
+      - /docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      - /etc/n8n-task-runners.json:/etc/n8n-task-runners.json:ro
+    entrypoint: ["tini", "--", "/docker-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    platform: "{{ n8n_docker_platform | default('linux/amd64') }}"
+  tags: [docker, n8n]

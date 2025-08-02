@@ -1,0 +1,11 @@
+groups:
+- name: n8n-health
+  rules:
+  - alert: N8NUnhealthy
+    expr: probe_success == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "n8n health endpoint is unhealthy or unreachable"
+      description: "n8n /healthz endpoint failed. Check service status."

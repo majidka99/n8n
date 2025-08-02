@@ -1,0 +1,15 @@
+set daemon 60
+set logfile syslog facility log_daemon
+set mailserver {{ postfix_relay_host }} port {{ postfix_relay_port }}
+    username "{{ postfix_relay_username }}" password "{{ postfix_relay_password }}"
+    using tlsv12
+set alert {{ monitoring_alert_email_to }}
+set mail-format { from: {{ monitoring_alert_email_from }} }
+
+check process n8n with pidfile /var/run/n8n.pid
+  start program = "/usr/bin/systemctl start n8n"
+  stop program  = "/usr/bin/systemctl stop n8n"
+  if failed port {{ n8n_port }} protocol http request "/healthz" then alert
+
+check file backup.log with path /var/log/n8n/backup.log
+  if match "ERROR" then alert

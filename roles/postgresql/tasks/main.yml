@@ -1,0 +1,93 @@
+# postgresql/tasks/main.yml
+# Deploy and secure PostgreSQL for n8n using Docker Compose
+
+- name: Ensure backup directory exists
+  file:
+    path: "{{ postgresql_backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  become: true
+
+- name: Deploy PostgreSQL with Docker Compose
+  template:
+    src: docker-compose.postgres.yml.j2
+    dest: /opt/postgres/docker-compose.yml
+    owner: root
+    group: root
+    mode: 0640
+  become: true
+
+- name: Start PostgreSQL container
+  community.docker.docker_compose:
+    project_src: /opt/postgres
+    restarted: true
+  become: true
+
+- name: Wait for PostgreSQL to be ready
+  wait_for:
+    host: 127.0.0.1
+    port: 5432
+    delay: 5
+    timeout: 60
+  become: true
+
+- name: Copy custom postgresql.conf
+  template:
+    src: postgresql.conf.j2
+    dest: /opt/postgres/postgresql.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Copy custom pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /opt/postgres/pg_hba.conf
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Reload PostgreSQL config
+  command: docker exec postgres pg_ctl reload
+  become: true
+  ignore_errors: true
+
+- name: Create n8n database and user with least privilege
+  community.docker.docker_container_exec:
+    container: postgres
+    command: |
+      psql -U {{ n8n_database_user }} -d postgres -c "DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ n8n_database_name }}') THEN
+          CREATE DATABASE {{ n8n_database_name }};
+        END IF;
+      END$$;"
+  become: true
+
+- name: Ensure n8n user exists and has privileges
+  community.docker.docker_container_exec:
+    container: postgres
+    command: |
+      psql -U {{ n8n_database_user }} -d postgres -c "DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ n8n_database_user }}') THEN
+          CREATE USER {{ n8n_database_user }} WITH PASSWORD '{{ n8n_database_password }}';
+        END IF;
+        GRANT ALL PRIVILEGES ON DATABASE {{ n8n_database_name }} TO {{ n8n_database_user }};
+      END$$;"
+  become: true
+
+- name: Set up nightly logical backup via cron
+  cron:
+    name: "Nightly PostgreSQL logical backup"
+    user: root
+    job: "docker exec postgres pg_dump -U {{ n8n_database_user }} {{ n8n_database_name }} > {{ postgresql_backup_dir }}/n8n_pg_backup_$(date +\%F).sql"
+    minute: 0
+    hour: 2
+  become: true
+
+# SSL scenario and managed service scenario are documented in templates and comments.

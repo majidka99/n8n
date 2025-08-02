@@ -1,0 +1,7 @@
+# postgresql.conf for secure local or private network access
+listen_addresses = '{{ postgresql_listen_addresses | default("127.0.0.1") }}'
+ssl = {{ postgresql_ssl | default('off') }}
+# To enable SSL, set postgresql_ssl: 'on' and provide cert/key paths
+# ssl_cert_file = '/etc/ssl/certs/pg_server.crt'
+# ssl_key_file = '/etc/ssl/private/pg_server.key'
+# ssl_ciphers = 'HIGH:!aNULL:!MD5'

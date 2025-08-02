@@ -1,0 +1,20 @@
+---
+# system_update/handlers/main.yml
+
+- name: restart ssh
+  systemd:
+    name: ssh
+    state: restarted
+  become: true
+
+- name: restart fail2ban
+  systemd:
+    name: fail2ban
+    state: restarted
+  become: true
+
+- name: restart unattended-upgrades
+  systemd:
+    name: unattended-upgrades
+    state: restarted
+  become: true

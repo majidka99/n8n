@@ -1,0 +1,5 @@
+---
+- name: Restart locale-dependent services
+  service:
+    name: cron
+    state: restarted

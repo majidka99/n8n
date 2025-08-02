@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+DATE=$(date +%Y%m%d)
+BACKUP_DIR={{ backup_dir }}
+KEEP={{ backup_keep_count | default(2) }}
+
+# Backup n8n data volume using docker run
+mkdir -p /tmp/n8n_data_$DATE
+sudo docker run --rm -v n8n_data:/data -v /tmp/n8n_data_$DATE:/backup busybox tar czf /backup/n8n_data.tar.gz -C /data .
+
+# Backup Postgres data volume
+mkdir -p /tmp/pg_data_$DATE
+sudo docker run --rm -v pg_data:/data -v /tmp/pg_data_$DATE:/backup busybox tar czf /backup/pg_data.tar.gz -C /data .
+
+# Archive configs and templates
+CONFIG_ARCHIVE=/tmp/n8n_configs_$DATE.tar.gz
+tar czf $CONFIG_ARCHIVE /etc/nginx /opt/n8n /opt/postgres /etc/letsencrypt || true
+
+# Create final archive
+FINAL_ARCHIVE=$BACKUP_DIR/n8n_stack_backup_${DATE}.tar.gz
+tar czf $FINAL_ARCHIVE /tmp/n8n_data_$DATE/n8n_data.tar.gz /tmp/pg_data_$DATE/pg_data.tar.gz $CONFIG_ARCHIVE {{ backup_pg_dump_dir }}/*.sql
+
+# Cleanup temp
+rm -rf /tmp/n8n_data_$DATE /tmp/pg_data_$DATE $CONFIG_ARCHIVE
+
+# Rotate backups
+ls -1t $BACKUP_DIR/n8n_stack_backup_*.tar.gz | tail -n +$((KEEP+1)) | xargs -r rm --
+
+# Email notification (requires mailutils/postfix)
+if command -v mail >/dev/null 2>&1; then
+  echo "n8n backup completed: $FINAL_ARCHIVE" | mail -s "[n8n] Backup completed on $(hostname)" {{ backup_notify_email }}
+fi
+
+# List stored backups
+ls -lh $BACKUP_DIR/n8n_stack_backup_*.tar.gz

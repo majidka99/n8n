@@ -1,0 +1,19 @@
+# Main Postfix configuration for satellite/relay mode
+relayhost = [{{ postfix_relay_host }}]:{{ postfix_relay_port }}
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+myhostname = {{ ansible_fqdn | default(inventory_hostname) }}
+myorigin = /etc/mailname
+mydestination = 
+inet_interfaces = loopback-only
+inet_protocols = all
+
+# Optional: increase verbosity for troubleshooting
+# debug_peer_list = {{ postfix_relay_host }}
+# debug_peer_level = 3

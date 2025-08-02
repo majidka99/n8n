@@ -1,0 +1,15 @@
+global:
+  smtp_smarthost: '{{ postfix_relay_host }}:{{ postfix_relay_port }}'
+  smtp_from: '{{ monitoring_alert_email_from }}'
+  smtp_auth_username: '{{ postfix_relay_username }}'
+  smtp_auth_password: '{{ postfix_relay_password }}'
+  smtp_require_tls: true
+
+route:
+  receiver: 'email-alerts'
+
+receivers:
+  - name: 'email-alerts'
+    email_configs:
+      - to: '{{ monitoring_alert_email_to }}'
+        send_resolved: true

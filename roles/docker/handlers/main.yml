@@ -1,0 +1,11 @@
+- name: Restart Docker service
+  service:
+    name: docker
+    state: restarted
+  when: docker_service_changed
+
+- name: Reload NGINX service
+  service:
+    name: nginx
+    state: reloaded
+  when: nginx_service_changed

@@ -1,0 +1,75 @@
+# backup/tasks/main.yml
+# Implements robust backup and disaster recovery for n8n stack
+
+- name: Ensure backup directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  loop:
+    - "{{ backup_dir }}"
+    - "{{ backup_pg_dump_dir }}"
+  become: true
+
+- name: Schedule weekly full backup (cron)
+  cron:
+    name: "Weekly n8n stack backup"
+    user: root
+    job: "{{ backup_script_path }} >> {{ backup_log_path }} 2>&1"
+    minute: 0
+    hour: 3
+    weekday: 0
+  become: true
+
+- name: Deploy backup script
+  template:
+    src: backup.sh.j2
+    dest: "{{ backup_script_path }}"
+    owner: root
+    group: root
+    mode: 0750
+  become: true
+
+- name: Schedule nightly logical PostgreSQL backup (cron)
+  cron:
+    name: "Nightly n8n pg_dump backup"
+    user: root
+    job: "{{ backup_pg_dump_script_path }} >> {{ backup_log_path }} 2>&1"
+    minute: 0
+    hour: 2
+  become: true
+
+- name: Deploy pg_dump backup script
+  template:
+    src: pg_dump_backup.sh.j2
+    dest: "{{ backup_pg_dump_script_path }}"
+    owner: root
+    group: root
+    mode: 0750
+  become: true
+
+# Optionally deploy rclone/restic config and upload script if enabled
+- name: Deploy rclone/restic upload script (optional)
+  template:
+    src: upload_offsite.sh.j2
+    dest: "{{ backup_upload_script_path }}"
+    owner: root
+    group: root
+    mode: 0750
+  when: backup_offsite_enabled | default(false)
+  become: true
+
+- name: Schedule offsite upload after backup (cron)
+  cron:
+    name: "Upload n8n backup offsite"
+    user: root
+    job: "{{ backup_upload_script_path }} >> {{ backup_log_path }} 2>&1"
+    minute: 30
+    hour: 3
+    weekday: 0
+  when: backup_offsite_enabled | default(false)
+  become: true
+
+# Task to test restore in staging (documented in docs)

@@ -1,0 +1,22 @@
+server_name: n8n.majitask.fun
+n8n_image: n8nio/n8n
+n8n_container_name: n8n
+n8n_port: 5678
+n8n_db_type: postgres
+n8n_db_host: db
+n8n_db_port: 5432
+n8n_db_user: n8n
+n8n_db_password: your_db_password
+n8n_db_name: n8n
+n8n_env: 
+  - N8N_BASIC_AUTH_USER=your_username
+  - N8N_BASIC_AUTH_PASSWORD=your_password
+  - N8N_HOST=n8n.majitask.fun
+  - N8N_PORT=5678
+  - N8N_PROTOCOL=https
+  - N8N_DB_TYPE=postgres
+  - N8N_DB_HOST=db
+  - N8N_DB_PORT=5432
+  - N8N_DB_USER=n8n
+  - N8N_DB_PASSWORD=your_db_password
+  - N8N_DB_NAME=n8n

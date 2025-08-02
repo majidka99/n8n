@@ -1,0 +1,11 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/nginx/*.log
+      - /var/log/nginx/*.log
+      - /var/log/postgresql/*.log
+      - /var/log/syslog
+      - /var/log/auth.log
+output.logstash:
+  hosts: ["{{ monitoring_log_aggregation_host }}:{{ monitoring_log_aggregation_port }}"]

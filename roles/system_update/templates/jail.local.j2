@@ -1,0 +1,10 @@
+[DEFAULT]
+bantime  = 600
+findtime  = 600
+maxretry = 5
+backend = systemd
+
+[sshd]
+enabled = true
+port    = {{ system_update_ssh_port }}
+logpath = /var/log/auth.log
