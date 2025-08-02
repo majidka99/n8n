@@ -1,5 +1,15 @@
 # postgresql/tasks/main.yml
+
 # Deploy and secure PostgreSQL for n8n using Docker Compose
+
+- name: Ensure /opt/postgres directory exists
+  file:
+    path: /opt/postgres
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  become: true
 
 - name: Ensure backup directory exists
   file:
