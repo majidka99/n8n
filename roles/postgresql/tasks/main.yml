@@ -85,7 +85,7 @@
   cron:
     name: "Nightly PostgreSQL logical backup"
     user: root
-    job: "docker exec postgres pg_dump -U {{ n8n_database_user }} {{ n8n_database_name }} > {{ postgresql_backup_dir }}/n8n_pg_backup_$(date +\%F).sql"
+    job: 'docker exec postgres pg_dump -U {{ n8n_database_user }} {{ n8n_database_name }} > {{ postgresql_backup_dir }}/n8n_pg_backup_$(date +%F).sql'
     minute: 0
     hour: 2
   become: true
