@@ -1,5 +1,5 @@
 # Docker role required variables
-ansible_distribution_release: "focal"  # or your Ubuntu release (e.g., jammy)
+ansible_distribution_release: "noble"  # Ubuntu 24.04 (noble)
 n8n_image_tag: "latest"
 n8n_docker_platform: "linux/amd64"
 n8n_log_level: "info"
