@@ -1,10 +1,10 @@
 ---
 # Deploy monitoring stack for n8n
-- name: Ensure Docker is installed
-  apt:
-    name: docker.io
-    state: present
-    update_cache: yes
+- name: Verify Docker is available
+  command: docker --version
+  register: docker_check
+  failed_when: docker_check.rc != 0
+  changed_when: false
   when: monitoring_enable_node_exporter or monitoring_enable_cadvisor
 
 - name: Deploy node exporter via Docker
@@ -32,14 +32,14 @@
     state: started
   when: monitoring_enable_cadvisor
 
-- name: Install Monit (optional)
+- name: Install Monit
   apt:
     name: monit
     state: present
     update_cache: yes
   when: monitoring_enable_monit
 
-- name: Configure Monit (optional)
+- name: Configure Monit
   template:
     src: monitrc.j2
     dest: /etc/monit/monitrc
@@ -49,7 +49,7 @@
   notify: Restart monit
   when: monitoring_enable_monit
 
-- name: Deploy Prometheus server via Docker (optional)
+- name: Deploy Prometheus server via Docker
   docker_container:
     name: prometheus
     image: prom/prometheus:latest
@@ -60,10 +60,10 @@
     restart_policy: unless-stopped
     state: started
     env:
-      - TZ=Europe/Prague
+      TZ: "Europe/Prague"
   when: monitoring_enable_prometheus
 
-- name: Deploy Alertmanager via Docker (optional)
+- name: Deploy Alertmanager via Docker
   docker_container:
     name: alertmanager
     image: prom/alertmanager:latest
@@ -94,6 +94,19 @@
     mode: 0644
   notify: Reload alertmanager
   when: monitoring_enable_alertmanager
+
+- name: Ensure Prometheus directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  loop:
+    - /etc/prometheus
+    - /etc/prometheus/alert.rules.d
+    - /etc/alertmanager
+  when: monitoring_enable_prometheus or monitoring_enable_alertmanager
 
 - name: Add n8n health alert rule
   template:
