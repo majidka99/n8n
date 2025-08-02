@@ -9,7 +9,7 @@ n8n_log_file_maxsize: 50
 n8n_log_file_maxcount: 60
 n8n_host: "localhost"
 dns_locale_timezone: "UTC"
----
+
 # Example: Centralized variables for all roles (non-secrets)
 
 n8n_domain: "example.com"
