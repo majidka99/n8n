@@ -4,12 +4,15 @@ services:
     image: n8nio/n8n:{{ n8n_image_tag }}
     user: "1000:1000"
     restart: unless-stopped
+    ports:
+      - "{{ n8n_port | default('5678') }}:5678"
     environment:
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: "{{ n8n_basic_auth_user }}"
       N8N_BASIC_AUTH_PASSWORD: "{{ n8n_basic_auth_password }}"
       N8N_HOST: "{{ n8n_domain }}"
       N8N_PORT: "{{ n8n_port | default('5678') }}"
+      N8N_PROTOCOL: "https"
       GENERIC_TIMEZONE: "Europe/Prague"
       WEBHOOK_URL: "{{ n8n_webhook_url }}"
       DB_TYPE: "{{ n8n_database_type }}"
@@ -19,7 +22,6 @@ services:
       DB_POSTGRESDB_USER: "{{ n8n_database_user }}"
       DB_POSTGRESDB_PASSWORD: "{{ n8n_database_password }}"
       N8N_USER_MANAGEMENT_DISABLED: "false"
-      # Optionally seed admin user if supported
     volumes:
       - n8n_data:/home/node/.n8n
     healthcheck:
@@ -28,30 +30,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    # Security options inherited from Docker role
-volumes:
-  n8n_data:version: '3.1'
-
-services:
-  n8n:
-    image: n8nio/n8n:latest
-    restart: always
-    ports:
-      - 5678:5678
-    environment:
-      - N8N_HOST=n8n.majitask.fun
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=https
-      - N8N_BASIC_AUTH_USER={{ n8n_basic_auth_user }}
-      - N8N_BASIC_AUTH_PASSWORD={{ n8n_basic_auth_password }}
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST={{ db_host }}
-      - DB_POSTGRESDB_PORT={{ db_port }}
-      - DB_POSTGRESDB_DATABASE={{ db_database }}
-      - DB_POSTGRESDB_USER={{ db_user }}
-      - DB_POSTGRESDB_PASSWORD={{ db_password }}
-    volumes:
-      - n8n_data:/home/node/.n8n
 
 volumes:
   n8n_data:
