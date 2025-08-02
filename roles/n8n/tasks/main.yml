@@ -7,15 +7,6 @@
     state: present
   become: true
 
-- name: Deploy n8n with Docker Compose
-  template:
-    src: docker-compose.yml.j2
-    dest: /opt/n8n/docker-compose.yml
-    owner: root
-    group: root
-    mode: 0640
-  become: true
-
 - name: Ensure /opt/n8n directory exists
   file:
     path: /opt/n8n
@@ -23,6 +14,15 @@
     owner: root
     group: root
     module: 0755
+  become: true
+  
+- name: Deploy n8n with Docker Compose
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/n8n/docker-compose.yml
+    owner: root
+    group: root
+    mode: 0640
   become: true
 
 - name: Start n8n container with Compose v2
