@@ -4,25 +4,6 @@
 - name: Include Nginx tasks
   include_tasks: nginx.yml
 
-- name: Install Certbot and Nginx plugin
-  apt:
-    name:
-      - certbot
-      - python3-certbot-nginx
-    state: present
-    update_cache: yes
-  tags: [letsencrypt, ssl]
-  become: true
-
-- name: Obtain/renew Let's Encrypt certificate for n8n domain
-  command: >
-    certbot --nginx --non-interactive --agree-tos --email {{ n8n_admin_email }} -d {{ n8n_domain }}
-  args:
-    creates: /etc/letsencrypt/live/{{ n8n_domain }}/fullchain.pem
-  notify: Reload nginx
-  tags: [letsencrypt, ssl]
-  become: true
-
 - name: Ensure Certbot renewal cron job exists
   cron:
     name: "Renew Let's Encrypt certificates with Certbot"
