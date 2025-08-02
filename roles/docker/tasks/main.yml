@@ -1,4 +1,5 @@
 # roles/docker/tasks/main.yml
+
 # Hardened Docker setup for n8n on Ubuntu 24.04
 
 - name: Install prerequisites for Docker repository
@@ -20,21 +21,27 @@
     mode: '0755'
   become: true
 
-- name: Download Docker’s official GPG key
+- name: Download Docker’s official GPG key (asc format)
   get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /etc/apt/keyrings/docker.gpg
+    dest: /etc/apt/keyrings/docker.asc
     mode: '0644'
   become: true
 
-- name: Add Docker APT repository
-  apt_repository:
-    # If Docker doesn’t yet publish a stable repository for “noble”, use “jammy” instead of ansible_distribution_release.
-    repo: >-
-      deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg]
-      https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable
-    filename: docker
-    state: present
+- name: Ensure Docker GPG key is world-readable
+  file:
+    path: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  become: true
+
+- name: Add Docker repository to sources.list.d
+  copy:
+    dest: /etc/apt/sources.list.d/docker.list
+    content: |
+      deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable
+    owner: root
+    group: root
+    mode: '0644'
   become: true
 
 - name: Update APT cache
