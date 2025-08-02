@@ -13,9 +13,9 @@
     state: directory
     owner: root
     group: root
-    module: 0755
+    mode: 0755
   become: true
-  
+
 - name: Deploy n8n with Docker Compose
   template:
     src: docker-compose.yml.j2
