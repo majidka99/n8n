@@ -91,21 +91,7 @@
     state: started
   become: true
 
-# Pull images (optional: docker_container pulls automatically)
-- name: Pull n8n image
-  community.docker.docker_image:
-    name: n8nio/n8n
-    tag: "{{ n8n_image_tag | default(docker_engine_version) }}"
-    source: pull
-    platform: "{{ n8n_docker_platform | default('linux/amd64') }}"
-  tags: [docker, n8n]
-
-- name: Pull PostgreSQL image
-  community.docker.docker_image:
-    name: postgres
-    tag: "{{ postgres_image_tag | default('latest') }}"
-    source: pull
-  tags: [docker, postgres]
+# Images will be pulled automatically by the docker_container module when deploying containers.
 
 - name: Ensure n8n data directory exists
   file:
