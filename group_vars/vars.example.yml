@@ -1,14 +1,5 @@
 # Docker role required variables
-ansible_distribution_release: "noble"  # Ubuntu 24.04 (noble)
-n8n_image_tag: "latest"
-n8n_docker_platform: "linux/amd64"
-n8n_log_level: "info"
-n8n_log_output: "console,file"
-n8n_log_file_location: "/var/log/n8n/n8n.log"
-n8n_log_file_maxsize: 50
-n8n_log_file_maxcount: 60
-n8n_host: "localhost"
-dns_locale_timezone: "UTC"
+
 
 # Example: Centralized variables for all roles (non-secrets)
 
