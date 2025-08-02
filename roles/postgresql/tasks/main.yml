@@ -33,7 +33,7 @@
 - name: Start PostgreSQL container with Compose v2
   community.docker.docker_compose_v2:
     project_src: /opt/postgres
-    restarted: true
+    state: present
   become: true
 
 - name: Wait for PostgreSQL to be ready
