@@ -21,10 +21,11 @@
   become: true
 
 - name: Add Docker GPG key to keyring
-  get_url:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /usr/share/keyrings/docker-archive-keyring.gpg
-    mode: '0644'
+  shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    chmod 644 /usr/share/keyrings/docker-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
   become: true
 
 - name: Add Docker apt repository
@@ -77,15 +78,6 @@
     state: started
   become: true
 
-- name: Pull n8nio/n8n and postgres images
-  docker_image:
-    name: "{{ item }}"
-    source: pull
-  loop:
-    - n8nio/n8n:latest
-    - postgres:latest
-  become: true
-
 - name: Pull n8n Docker image
   docker_image:
     name: "n8nio/n8n"
@@ -93,6 +85,13 @@
     source: pull
     platform: "{{ n8n_docker_platform | default('linux/amd64') }}"
   tags: [docker, n8n]
+
+- name: Pull PostgreSQL Docker image
+  docker_image:
+    name: "postgres"
+    tag: "{{ postgres_image_tag | default('latest') }}"
+    source: pull
+  tags: [docker, postgres]
 
 - name: Create n8n data directory
   file:
