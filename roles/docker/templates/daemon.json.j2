@@ -5,10 +5,12 @@
     "max-size": "10m",
     "max-file": "3"
   }
-  // To enable TLS-secured TCP socket, uncomment and configure below:
-  // ,"tls": true,
-  // "tlscacert": "/etc/docker/certs/ca.pem",
-  // "tlscert": "/etc/docker/certs/server-cert.pem",
-  // "tlskey": "/etc/docker/certs/server-key.pem",
-  // "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"]
+  {# 
+    To enable TLS-secured TCP socket, add:
+    "tls": true,
+    "tlscacert": "/etc/docker/certs/ca.pem",
+    "tlscert": "/etc/docker/certs/server-cert.pem",
+    "tlskey": "/etc/docker/certs/server-key.pem",
+    "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"]
+  #}
 }

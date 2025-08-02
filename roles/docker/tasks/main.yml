@@ -44,7 +44,7 @@
     mode: '0644'
   become: true
 
-- name: Update APT cache
+- name: Update APT cache after adding Docker repo
   apt:
     update_cache: yes
   become: true
@@ -81,7 +81,7 @@
     owner: root
     group: root
     mode: '0644'
-  notify: restart docker
+  notify: Restart Docker Service
   become: true
 
 - name: Enable and start Docker service
