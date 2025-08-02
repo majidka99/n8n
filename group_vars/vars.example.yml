@@ -16,6 +16,7 @@ n8n_webhook_url: "https://example.com/"
 docker_engine_version: "28.3.3"         # Latest stable major release as of 2025
 containerd_version: "2.1.0"             # Align with the containerd 2.x series
 docker_service_name: "docker"
+docker_compose_plugin_version: "2.39.1" # Latest Compose v2 release on GitHub (July 2025)
 
 # Docker Compose v2 (CLI plugin)
 docker_compose_plugin_version: "2.39.1" # Latest Compose v2 release on GitHub (July 2025)
