@@ -16,6 +16,15 @@
     mode: 0640
   become: true
 
+- name: Ensure /opt/n8n directory exists
+  file:
+    path: /opt/n8n
+    state: directory
+    owner: root
+    group: root
+    module: 0755
+  become: true
+
 - name: Start n8n container with Compose v2
   community.docker.docker_compose_v2:
     project_src: /opt/n8n

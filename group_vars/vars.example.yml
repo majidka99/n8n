@@ -1,6 +1,3 @@
-# Docker role required variables
-
-
 # Example: Centralized variables for all roles (non-secrets)
 
 n8n_domain: "example.com"
@@ -11,6 +8,16 @@ n8n_database_port: 5432
 n8n_database_user: "n8n_user"
 n8n_database_name: "n8n"
 n8n_webhook_url: "https://example.com/"
+
+# Aliases for Compose templates using db_* variables
+db_host: "{{ n8n_database_host }}"
+db_port: "{{ n8n_database_port }}"
+db_database: "{{ n8n_database_name }}"
+db_user: "{{ n8n_database_user }}"
+db_password: "{{ n8n_database_password }}"
+
+# Alias for compatibility with templates/roles expecting db_host
+db_host: "{{ n8n_database_host }}"
 
 backup_dir: "/archive/backup/n8n"
 backup_pg_dump_dir: "/archive/backup/n8n/pg_dumps"
