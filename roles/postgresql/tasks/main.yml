@@ -39,7 +39,7 @@
 - name: Wait for PostgreSQL to be ready
   wait_for:
     host: 127.0.0.1
-    port: 5432
+    port: 15432
     delay: 5
     timeout: 60
   become: true
