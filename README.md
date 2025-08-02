@@ -2,7 +2,14 @@
 
 <div align="center">
 
-[![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&├── 🎭 roles/                  # Modular components
+
+[![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=for-the-badge&logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![n8n](https://img.shields.io/badge/n8n-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)](https://n8n.io/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu_24.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+
+```
+├── 🎭 roles/                  # Modular components
 │   ├── 💾 backup/            # Automated backups & rotation
 │   ├── 🌐 dns_locale/        # DNS records & localization
 │   ├── 🐳 docker/            # Docker engine & security
@@ -15,8 +22,8 @@
 │   ├── 🔒 reverse_proxy/     # Reverse proxy & SSL automation
 │   ├── 🔄 system_update/     # OS updates & SSH hardening
 │   └── 👥 user_access/       # User management & SSH keys
-├── 📚 docs/                  # Comprehensive documentationlogoColor=white)](https://www.ansible.com/)
-[![Dock## 📊 Monitoring & Alerting
+├── 📚 docs/                  # Comprehensive documentation
+```
 
 **📈 [Complete Monitoring Guide](docs/02_roles/monitoring.md)** ← **Set up enterprise monitoring**
 
