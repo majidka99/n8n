@@ -52,11 +52,11 @@
 - name: Install Docker Engine, CLI and Compose plugin
   apt:
     name:
-      - "docker-ce={{ docker_engine_version }}"
-      - "docker-ce-cli={{ docker_engine_version }}"
-      - "containerd.io={{ containerd_version }}"
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
       - docker-buildx-plugin
-      - "docker-compose-plugin={{ docker_compose_plugin_version }}"
+      - docker-compose-plugin
     state: present
     update_cache: yes
   become: true

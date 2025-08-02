@@ -12,16 +12,6 @@ n8n_database_user: "n8n_user"
 n8n_database_name: "n8n"
 n8n_webhook_url: "https://example.com/"
 
-# Docker Engine & container runtime
-docker_engine_version: "28.3.3"         # Latest stable major release as of 2025
-containerd_version: "2.1.0"             # Align with the containerd 2.x series
-docker_service_name: "docker"
-docker_compose_plugin_version: "2.39.1" # Latest Compose v2 release on GitHub (July 2025)
-
-# Docker Compose v2 (CLI plugin)
-docker_compose_plugin_version: "2.39.1" # Latest Compose v2 release on GitHub (July 2025)
-docker_compose_version: "2.39.1"        # Match the plugin version if used elsewhere
-
 backup_dir: "/archive/backup/n8n"
 backup_pg_dump_dir: "/archive/backup/n8n/pg_dumps"
 backup_script_path: "/usr/local/bin/n8n_stack_backup.sh"
