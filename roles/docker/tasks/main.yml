@@ -101,12 +101,6 @@
     state: started
     enabled: true
 
-- name: Add user to the Docker group
-  user:
-    name: "{{ ansible_user }}"
-    group: docker
-    append: yes
-
 - name: Install Docker Compose
   get_url:
     url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)"

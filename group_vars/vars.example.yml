@@ -1,3 +1,14 @@
+# Docker role required variables
+ansible_distribution_release: "focal"  # or your Ubuntu release (e.g., jammy)
+n8n_image_tag: "latest"
+n8n_docker_platform: "linux/amd64"
+n8n_log_level: "info"
+n8n_log_output: "console,file"
+n8n_log_file_location: "/var/log/n8n/n8n.log"
+n8n_log_file_maxsize: 50
+n8n_log_file_maxcount: 60
+n8n_host: "localhost"
+dns_locale_timezone: "UTC"
 ---
 # Example: Centralized variables for all roles (non-secrets)
 
@@ -9,9 +20,16 @@ n8n_database_port: 5432
 n8n_database_user: "n8n_user"
 n8n_database_name: "n8n"
 n8n_webhook_url: "https://example.com/"
-docker_version: "20.10.7"
-docker_compose_version: "1.29.2"
+
+# Docker Engine & container runtime
+docker_engine_version: "28.0.1"         # Latest stable major release as of 2025
+containerd_version: "2.1.0"             # Align with the containerd 2.x series
 docker_service_name: "docker"
+
+# Docker Compose v2 (CLI plugin)
+docker_compose_plugin_version: "2.39.1" # Latest Compose v2 release on GitHub (July 2025)
+docker_compose_version: "2.39.1"        # Match the plugin version if used elsewhere
+
 backup_dir: "/archive/backup/n8n"
 backup_pg_dump_dir: "/archive/backup/n8n/pg_dumps"
 backup_script_path: "/usr/local/bin/n8n_stack_backup.sh"
