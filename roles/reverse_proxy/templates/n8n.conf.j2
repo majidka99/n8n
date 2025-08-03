@@ -1,50 +1,38 @@
 server {
-    listen 443 ssl http2;
+    listen 80;
     server_name {{ n8n_domain }};
 
-    ssl_certificate /etc/letsencrypt/live/{{ n8n_domain }}/fullchain.pem;
+    # Redirect all HTTP traffic to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{ n8n_domain }};
+
+    ssl_certificate     /etc/letsencrypt/live/{{ n8n_domain }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ n8n_domain }}/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-    add_header Content-Security-Policy "\
-      default-src 'self';\
-      script-src 'self' 'unsafe-inline';\
-      style-src  'self' 'unsafe-inline';\
-      img-src    'self' data:;\
-      connect-src 'self';\
-      font-src   'self';\
-    " always;
-    server_tokens off;
-    client_max_body_size 10M;
-    client_body_buffer_size 128k;
-    client_header_buffer_size 1k;
-    access_log /var/log/nginx/n8n_access.log;
-    error_log /var/log/nginx/n8n_error.log;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Increase buffer size for large payloads (optional)
+    client_max_body_size 100M;
 
     location / {
-        limit_except GET POST { deny all; }
         proxy_pass http://localhost:5678;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 300;
-        proxy_connect_timeout 300;
-        proxy_send_timeout 300;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 443;
+        chunked_transfer_encoding off;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 3600;
+        proxy_send_timeout 3600;
     }
-
-    # ModSecurity integration (if installed)
-    # modsecurity on;
-    # modsecurity_rules_file /etc/nginx/modsec/main.conf;
-}
-
-server {
-    listen 80;
-    server_name {{ n8n_domain }};
-    return 301 https://$host$request_uri;
 }
