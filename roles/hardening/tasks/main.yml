@@ -99,18 +99,32 @@
     group: root
     mode: '0755'
 
-- name: Install Docker Bench Security
-  apt:
-    name: docker-bench-security
-    state: present
-    update_cache: yes
- 
-- name: Run docker bench security
+- name: Run Docker Bench Security scan
   shell: |
-    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc:ro -v /usr/bin/docker:/usr/bin/docker:ro --network host docker/docker-bench-security > /var/log/security/docker-bench-security.log
+    docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /etc:/etc:ro \
+    -v /usr/bin/containerd:/usr/bin/containerd:ro \
+    -v /usr/bin/runc:/usr/bin/runc:ro \
+    -v /usr/lib/systemd:/usr/lib/systemd:ro \
+    -v /lib/systemd:/lib/systemd:ro \
+    -v /etc/systemd:/etc/systemd:ro \
+    --label docker_bench_security \
+    docker/docker-bench-security > /var/log/security/docker-bench-security.log 2>&1
   args:
     creates: /var/log/security/docker-bench-security.log
   when: hardening_enable_docker_bench
+
+- name: Schedule weekly Docker Bench Security scan
+  cron:
+    name: "Docker Bench Security weekly scan"
+    user: root
+    job: "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc:ro --label docker_bench_security docker/docker-bench-security | mail -s 'Docker Security Scan' {{ hardening_alert_email }}"
+    weekday: "0"
+    hour: "2"
+    minute: "0"
+    state: present
+  when: hardening_enable_docker_bench and hardening_alert_email is defined
 
 - name: Run Lynis scan
   shell: |
