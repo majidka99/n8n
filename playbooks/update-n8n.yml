@@ -1,0 +1,32 @@
+---
+- name: Update n8n using Docker Compose
+  hosts: localhost
+  become: yes
+  vars:
+    compose_dir: /opt/n8n/  # <-- Set this to your actual path
+
+  tasks:
+    - name: Ensure Docker Compose is installed
+      command: docker compose version
+      register: compose_check
+      ignore_errors: yes
+
+    - name: Fail if Docker Compose is not installed
+      fail:
+        msg: "Docker Compose is not installed!"
+      when: compose_check.rc != 0
+
+    - name: Pull latest n8n image
+      command: docker compose pull
+      args:
+        chdir: "{{ compose_dir }}"
+
+    - name: Stop and remove current containers
+      command: docker compose down
+      args:
+        chdir: "{{ compose_dir }}"
+
+    - name: Start n8n with updated image
+      command: docker compose up -d
+      args:
+        chdir: "{{ compose_dir }}"
