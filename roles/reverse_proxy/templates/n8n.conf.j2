@@ -11,6 +11,7 @@ server {
     ssl_stapling on;
     ssl_stapling_verify on;
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header Content-Security-Policy "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; font-src 'self';" always;
     server_tokens off;
     client_max_body_size 10M;
     client_body_buffer_size 128k;
