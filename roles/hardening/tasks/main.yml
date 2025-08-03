@@ -68,9 +68,12 @@
     group: root
     mode: 0644
 
-- name: Install ModSecurity for Nginx (optional)
+- name: Install ModSecurity components for Nginx
   apt:
-    name: libnginx-mod-security
+    name:
+      - libnginx-mod-http-modsecurity
+      - libmodsecurity3t64
+      - modsecurity-crs  # OWASP Core Rule Set
     state: present
     update_cache: yes
   when: hardening_enable_modsecurity and hardening_reverse_proxy == 'nginx'
@@ -88,6 +91,20 @@
   debug:
     msg: "Nginx hardening is handled in reverse_proxy role."
 
+- name: Create security log directory
+  file:
+    path: /var/log/security
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install Docker Bench Security
+  apt:
+    name: docker-bench-security
+    state: present
+    update_cache: yes
+ 
 - name: Run docker bench security
   shell: |
     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc:ro -v /usr/bin/docker:/usr/bin/docker:ro --network host docker/docker-bench-security > /var/log/security/docker-bench-security.log
@@ -127,4 +144,3 @@
     msg: "WARNING: n8n audit report was not generated. Ensure n8n CLI is available on the host."
   when: n8n_audit_result.rc != 0 and hardening_enable_n8n_audit | default(true)
 
-# OpenSCAP and OpenVAS can be added similarly if required
