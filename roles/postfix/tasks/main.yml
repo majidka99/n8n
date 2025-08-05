@@ -53,8 +53,11 @@
   cron:
     name: "logwatch daily report"
     user: root
+    minute: '30'
+    hour: '3'
     job: "/usr/sbin/logwatch --output mail --mailto={{ postfix_logwatch_email }} --detail high"
     state: present
+    # Changed from every minute to daily at 3:30am for best practice and to reduce system load
 
 - name: DKIM guidance (see docs)
   debug:

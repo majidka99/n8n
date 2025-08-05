@@ -50,8 +50,11 @@
   cron:
     name: "AIDE daily integrity check"
     user: root
+    minute: '0'
+    hour: '4'
     job: "/usr/bin/aide.wrapper --check | mail -s 'AIDE Integrity Check' {{ hardening_alert_email }}"
     state: present
+    # Ensures AIDE runs daily at 4:00am (not every minute) for best practice and to reduce system load
   when: hardening_enable_aide
 
 - name: Install unattended-upgrades for automatic security updates
