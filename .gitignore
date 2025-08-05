@@ -13,3 +13,6 @@ testing_scripts
 
 # log file for running ansible playbook
 log.txt
+
+# Ignore folders that contain sensitive data or are not needed in the repository
+.agents
